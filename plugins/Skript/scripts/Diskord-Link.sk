@@ -244,7 +244,7 @@ on load:
     loginBot("")
     add ("&r", "&a", "&b", "&c", "&d", "&e", "&f", "&l", "&m", "&n", "&o", "&k", "&0", "&1", "&2", "&3", "&4", "&5", "&6", "&7", "&8" and "&9") to {char.color.remove::*}
     #    Ligne de test, uniquement pour le mode developpeur.
-    #add ("reg", "bot", "stats", "cleverbot", "server", "lmgtfy", "ping", "nick", "clear", "game", "say", "sk reload", "eval", "cmd", "report", "report close", "play", "current", "playlist", "disconnect", "pause", "resume", "volume", "stop", "skip" and "current") to {diskord.commands::*}
+    add ("reg", "bot", "stats", "cleverbot", "server", "lmgtfy", "ping", "nick", "clear", "game", "say", "sk reload", "eval", "cmd", "report", "report close", "play", "current", "playlist", "disconnect", "pause", "resume", "volume", "stop", "skip" and "current") to {diskord.commands::*}
     #    Ligne de Débug !
     set {diskord.song.load} to false
 
