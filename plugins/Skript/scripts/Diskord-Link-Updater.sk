@@ -4,3 +4,47 @@
 #											By Tutur1004 & Polymeth										   #
 # -------------------------------------------------------------------------------------------------------- #
 #==========================================================================================================#
+
+option:
+    installer-version: 1.0
+#
+on load:
+    remove 1 from {diskordlink.recent.update}
+    if 1 = 1:
+        wait 5 ticks
+        if file existance of "plugins/Diskord-Link/config.yml" is true:
+            #   Le fichier config existe on vérifie si la version est bonne.
+            send "[Diskord-Link] Configuration trouvée, lancement du BOT.." to console
+            set {_last.version} to line 1 from url "https://raw.githubusercontent.com/tutur1004/Diskord-Link/master/DiskordLink-Version.md"
+            if "%{diskordlink.version}%" in not "%{_last.version}%":
+                set {diskordlink.recent.update} to 5
+            if "%{diskordlink.updater.version}%" is "{@installer-version}":
+                download file from "https://raw.githubusercontent.com/tutur1004/Diskord-Link/master/plugins/Skript/scripts/Diskord-Link.sk" to file "plugins/Skript/scripts/Diskord-Link.sk"
+                wait 5 ticks
+                reload script "Diskord-Link"
+            else:
+                send "[Diskord-Link] WARN: la version de votre Updater Diskord-Link n'a jamais été utilisée sur ce serveur !" to console
+                send "[Diskord-Link] Vos précédentes Configuration ont été déplacées vers le fichier config.old.%{diskordlink.updater.version}%.yml" to console
+                move file "plugins/Diskord-Link/config.yml" to "plugins/Diskord-Link/config.old.%{diskordlink.updater.version}%.yml"
+                wait 1 tick
+                send "[Diskord-Link] Le nouveau fichier de config a été installé dans votre dossier." to console
+                download file from "https://raw.githubusercontent.com/tutur1004/Diskord-Link/master/plugins/Diskord-Link/config.yml" to file "plugins/Diskord-Link/config.yml"
+        else:
+            #   Le fichier config n'existe pas on le fait installer
+            send "[Diskord-Link] Aucune Configuration trouvée, lancement du programme d'installation.." to console
+            create dir "plugins/Diskord-Link"
+            wait 1 tick
+            download file from "https://raw.githubusercontent.com/tutur1004/Diskord-Link/master/plugins/Diskord-Link/config.yml" to file "plugins/Diskord-Link/config.yml"
+            send "[Diskord-Link] Préparation terminée, merci de remplir le fichier de Configuration ce trouvant dans le dossier plugins/Diskord-Link/" to console
+        set {diskordlink.updater.version} to "{@installer-version}"
+#
+on join:
+    if {diskordlink.recent.update} is more than 0:
+        if player has permission "diskordlink.admin.update.notification":
+            send "<blue>[Diskord-Link] &6Diskord-Link a été &2automatiquement mis à jour &6récement !"
+#
+on unload:
+    wait 1 tick
+    delete file "plugins/Skript/scripts/Diskord-Link.sk"
+    send "[Diskord-Link] Config saved, Good Bey !" to console
+#
