@@ -1,8 +1,902 @@
 #==========================================================================================================#
 # -------------------------------------------------------------------------------------------------------- #
-#											   DISKORD LINK 4.0											   #
-#											By Tutur1004 & Polymeth										   #
+#                                            DISKORD LINK 4.0                                              #
+#                                            By Tutur1004 & Polymeth                                       #
 # -------------------------------------------------------------------------------------------------------- #
 #==========================================================================================================#
 
+#    Credits:
+#
+#
 
+#==========================================================================================================#
+# -------------------------------------------------------------------------------------------------------- #
+#                                                    FONCTIONS                                             #
+# -------------------------------------------------------------------------------------------------------- #
+#==========================================================================================================#
+
+function loginBot(name: text):
+    # TODO: Ajouter les verifications de METTRE_ID
+    login to user with token "%{diskordlink.token}%" with name "AdminBot"
+    wait 1 tick
+    send "{@prefix} &2Connexion du bot discord en cours..." to console
+    wait 1 seconds
+    set {_status} to status of "%{diskordlink.bot.admin}%" in guild "%{diskordlink.server.id}%"
+    if {_status} is "ONLINE":
+        send "{@prefix} &2Connexion du bot discord reussie. {@version}" to console
+        set nickname of user with id "%{diskordlink.bot.admin}%" to "%{diskordlink.bot.admin.pseudo}%" with bot "AdminBot" in guild with id "%{diskordlink.server.id}%"
+        if "%{diskordlink.bot.game}%" is not "<none>" or "<current>" or "<music>":
+            discord set game of bot "AdminBot" to "%{diskordlink.bot.game}%"
+    else:
+        send "{@prefix} &4Echec de connexion au bot discord. {@version}" to console
+
+    set {diskord.song.load} to false
+    #    La suite est coupée à cuase de bugs !
+    #wait 1 tick
+    #discord set channel "%{diskordlink.channel.gestion}%" name to "%{diskordlink.channel.gestion.name}%" with bot "AdminBot"
+    #discord set channel "%{diskordlink.channel.gestion}%" topic to "%{diskordlink.channel.gestion.topic}%" with bot "AdminBot"
+    #discord set channel "%{diskordlink.channel.chat}%" name to "%{diskordlink.channel.chat.name}%" with bot "AdminBot"
+    #discord set channel "%{diskordlink.channel.chat}%" topic to "%{diskordlink.channel.chat.topic}%" with bot "AdminBot"
+    #if {diskordlink.config.music-bot} is true:
+        #discord set channel "%{diskordlink.channel.music}%" name to "%{diskordlink.channel.music.name}%" with bot "AdminBot"
+        #discord set channel "%{diskordlink.channel.music}%" topic to "%{diskordlink.channel.music.topic}%" with bot "AdminBot"
+#
+function soundex(a: text) :: text:
+    #
+    #    Algorithme Soundex en Skript par Polymeth
+    #
+    do [set {_text} to "%convert string {_a} to uppercase%"]->[set {_first} to first character of {_text}]
+    replace all "a", "e", "i", "o", "u", "y" and " " with "" in {_text}
+    if first character of {_text} is not the first character of {_a}:
+        set {_text} to concatenate {_first} and {_text}
+    set {_text::*} to {_text} split at ""
+
+    loop {_text::*}:
+        if loop-value is "":
+            remove loop-value from {_text::*}
+
+    loop {_text::*}:
+        set {_v} to (loop-index parsed as number + 1)
+        if "%loop-index%" is "1":
+            if size of {_text::*} is 1:
+                return "%{_first}%000"
+            else:
+                remove loop-value from {_text::*}
+        else:
+            if loop-value is "%{_text::%{_v}%}%":
+                remove loop-value from {_text::*}
+
+            else:
+                if loop-value is "B" or "F" or "P" or "V":
+                    add "1" to {_s::*}
+                else if loop-value is "C" or "G" or "J" or "K" or "Q" or "S" or "X" or "Z":
+                    add "2" to {_s::*}
+                else if loop-value is "D" or "T":
+                    add "3" to {_s::*}
+                else if loop-value is "L":
+                    add "4" to {_s::*}
+                else if loop-value is "M" or "N":
+                    add "5" to {_s::*}
+                else if loop-value is "R":
+                    add "6" to {_s::*}
+                else if loop-value is "H" or "W":
+                    add "*" to {_s::*}
+
+
+    loop {_s::*}:
+        do [set {_v} to (loop-index parsed as number + 1)]->[set {_v2} to (loop-index parsed as number + 2)]
+        if {_s::*} is "*":
+            return "%{_first}%000"
+        else if loop-value is "%{_s::%{_v}%}%" and "%{_s::%{_v2}%}%":
+            do [remove {_s::%{_v}%} from {_s::*}]->[remove {_s::%{_v2}%} from {_s::*}]
+     #   else if loop-value is "%{_s::%{_v2}%}%":
+      #      if "%{_s::%{_v}%}%" is "*":
+       #         remove {_s::%{_v2}%} from {_s::*}
+        else if loop-value is "*":
+            remove loop-value from {_s::*}
+
+        else:
+            add 1 to {_t}
+            set {_final} to concatenate {_final} and loop-value
+            if size of {_s::*} is 1:
+                return "%{_first}%%{_final}%00"
+            if size of {_s::*} is 2:
+                if {_t} is 2:
+                    return "%{_first}%%{_final}%0"
+            else:
+                if {_t} is 3:
+                    return "%{_first}%%{_final}%"
+#
+function MsgMcDiskord(p: player, size: integer, cmd: text, color: text):
+    set {_cmd.loop::*} to {_cmd} split at " &|& "
+    set {_color::*} to {_color} split at " &|& "
+    set {_count.cmd} to 0
+    set {_count.color} to 0
+    loop {_cmd.loop::*}:
+        add 1 to {_count.cmd}
+    loop {_color::*}:
+        add 1 to {_count.color}
+    if {_count.cmd} = {_size}:
+        if {_count.color} = {_size}:
+            set {_tellraw} to "tellraw %{_p}% [{""text"":""[DiSKord-Link]"",""color"":""blue"",""clickEvent"":{""action"":""open_url"",""value"":""https://skript-mc.fr/forum/resources/659/""}}"
+            loop {_cmd.loop::*}:
+                set {_tellraw} to "%{_tellraw}%,{""text"":""%loop-value%"",""color"":""%{_color::%loop-index%}%""}"
+            set {_tellraw} to "%{_tellraw}%]"
+            execute console command "%{_tellraw}%"
+        else:
+            send "&4ERROR in code of message" to console
+    else:
+        send "&4ERROR in code of message" to console
+#
+function DiscordNick(p: text) :: text:
+    set {_nickname} to nickname of {_p} in guild "%{diskordlink.server.id}%"
+    set {_name} to name of {_p}
+    if "%{_nickname}%" is "NONE":
+        return "%{_name}%"
+    else:
+        return "%{_nickname}%"
+#
+function lowString(string: text) :: text:
+    set {_string::*} to {_string} split at ""
+    set {_count} to 1
+    loop {_string::*}:
+        add 1 to {_count}
+        if {_count} > 21:
+            set {_return} to "**~**"
+        else:
+            set {_return} to ""
+    set {_count} to 1
+    loop {_string::*}:
+        set {_return} to "%{_return}%%convert string loop-value to lowercase%"
+        if {_count} = 22:
+            set {_return} to "%{_return}%**~**"
+            stop loop
+        add 1 to {_count}
+    return "%{_return}%"
+#
+function notAvailableEmbed(channel: channel, command: text):
+    make embed "notAvailable"
+    set author of embed "notAvailable" to embed titled "Commande %{_command}%", with hyperlink "https://skript-mc.fr/forum/resources/659/", iconurl "http://i.imgur.com/jTktT84.png"
+    set description of embed "notAvailable" to "Cette commande n'est pas disponible pour le moment"
+    set color of embed "notAvailable" to "red"
+    send embed "notAvailable" to channel {_channel} with "AdminBot"
+    clear embed "notAvailable"
+#
+function noPermissionEmbed(channel: channel, command: text):
+    make embed "noPermission"
+    set author of embed "noPermission" to embed titled "Commande %{_command}%", with hyperlink "https://skript-mc.fr/forum/resources/659/", iconurl "http://i.imgur.com/HtGWqXY.png"
+    set description of embed "noPermission" to "Vous n'avez pas la permission d'executer cette commande"
+    set color of embed "noPermission" to "red"
+    #set thumbnail of embed "notAvailable" to "http://i.imgur.com/jTktT84.png"
+    send embed "noPermission" to channel {_channel} with "AdminBot"
+    clear embed "noPermission"
+#
+function adminEmbed(channel: channel, command: text, value: text):
+    make embed "adminEmbed"
+    set author of embed "adminEmbed" to embed titled "Commande %{_command}%", with hyperlink "https://skript-mc.fr/forum/resources/659/", iconurl "http://i.imgur.com/5GRmO4z.png"
+    set description of embed "adminEmbed" to "%{_value}%"
+    set color of embed "adminEmbed" to "green"
+    send embed "adminEmbed" to channel {_channel} with "AdminBot"
+    clear embed "adminEmbed"
+#
+function correctionEmbed(channel: channel, command: text, correct: text):
+    make embed "correctionEmbed"
+    set author of embed "correctionEmbed" to embed titled "Commande inconnue : %{_command}%", with hyperlink "https://skript-mc.fr/forum/resources/659/", iconurl "http://i.imgur.com/Q6Cqenb.png"
+    set description of embed "correctionEmbed" to "Vous ne voulez pas plutôt dire `%{_correct}%` ?"
+    set color of embed "correctionEmbed" to "blue"
+    send embed "correctionEmbed" to channel {_channel} with "AdminBot"
+    clear embed "correctionEmbed"
+#
+function ReportEmbed(id: int, object: text, aimed: text, sender: text, status: text, isclosed: boolean, sanction: text="[]"):
+    make embed "Report"
+    set title of embed "Report" to "Report ##%{_id}%"
+
+    add field "Objet", with value "```%{_object}%```", split false to embed "Report"
+    add field "Joueur visé", with value "%{_aimed}%", split true to embed "Report"
+    add field "Envoyé par", with value "%{_sender}%", split true to embed "Report"
+    add field "Status", with value "%{_status}%", split true to embed "Report"
+    if {reports.%{_id}%.status} is "Fermé":
+        add field "Sanction appliquée", with value "%{reports.%{_id}%.close.sanction}%", split true to embed "Report"
+        set color of embed "Report" to "RED"
+    else:
+        set color of embed "Report" to "GREEN"
+
+    send embed "Report" to channel "%{diskordlink.channel.gestion}%" with "AdminBot"
+#
+function currentembed(t: text):
+    set {_currenttrack} to track player "AdminBot" is playing
+
+    set {_title} to lowString("%title of track {_currenttrack}%")
+    set {_author} to lowString("%author of track {_currenttrack}%")
+
+    clear embed "CurrentMusic"
+    make embed "CurrentMusic"
+    set author of embed "CurrentMusic" to embed titled "Musique Actuelle", with hyperlink "https://skript-mc.fr/forum/resources/659/", iconurl "http://i.imgur.com/3UXmVeH.png"
+    add field "Titre", with value "%{_title}%", split true to embed "CurrentMusic"
+    add field "Auteur", with value "%{_author}%", split true to embed "CurrentMusic"
+    add field "Lien", with value "[%{_title}%](%{diskordlink.track.link::%{_currenttrack}%}%)", split true to embed "CurrentMusic"
+    add field "En lecture", with value "%position of track {_currenttrack}%", split true to embed "CurrentMusic"
+    add field "Proposée par", with value "%{diskordlink.track.auteur::%{_currenttrack}%}%", split true to embed "CurrentMusic"
+    set {_list::*} to queue of player "AdminBot"
+    set {_last} to the last element out of {_list::*}
+    if "%{_last}%" = "<none>":
+        add field "À suivre", with value "Aucune musique à suivre", split true to embed "CurrentMusic"
+    else:
+        set {_last} to lowString("%title of track {_last}%")
+        add field "À suivre", with value "%{_last}%", split true to embed "CurrentMusic"
+    set color of embed "CurrentMusic" to "white"
+    send embed "CurrentMusic" to channel "%{_t}%" with "AdminBot"
+    if "%{diskordlink.bot.game}%" is "<current>":
+        discord set game of bot "AdminBot" to "%{_title}%"
+#
+
+#==========================================================================================================#
+# -------------------------------------------------------------------------------------------------------- #
+#                                                    CONNEXION                                             #
+# -------------------------------------------------------------------------------------------------------- #
+#==========================================================================================================#
+
+on load:
+    clear {char.color.remove::*}
+    #    Ligne de test, uniquement pour le mode developpeur.
+    #delete {diskord.commands::*}
+    wait 2 tick
+    loginBot("")
+    add ("&r", "&a", "&b", "&c", "&d", "&e", "&f", "&l", "&m", "&n", "&o", "&k", "&0", "&1", "&2", "&3", "&4", "&5", "&6", "&7", "&8" and "&9") to {char.color.remove::*}
+    #    Ligne de test, uniquement pour le mode developpeur.
+    #add ("reg", "bot", "stats", "cleverbot", "server", "lmgtfy", "ping", "nick", "clear", "game", "say", "sk reload", "eval", "cmd", "report", "report close", "play", "current", "playlist", "disconnect", "pause", "resume", "volume", "stop", "skip" and "current") to {diskord.commands::*}
+    #    Ligne de Débug !
+    set {diskord.song.load} to false
+
+    #    Lignes désactivées pour le moment !
+    if 1 = 0:
+        wait 1 tick
+        set {_config} to "DiskordLink-config.yml"
+        if file "%{_config}%" exists:
+            send "{@prefix} <green>Version Windows chargee" to console
+            set {_diskord.load} to true
+        if {_diskord.load} is not true:
+            set {_config} to "plugins/Skript/scripts/DiskordLink-config.yml"
+            if file "%{_config}%" exists:
+                send "{@prefix} <green>Version Linux chargee" to console
+            else:
+                wait 1 second
+                loop 3 times:
+                    send "{@prefix} &4ERROR, missing FILE" to console
+                    stop trigger
+    #    Lignes désactivées pour le moment !
+
+    #    Recherche du fichier de Configuration.
+    if file existance of "plugins/Diskord-Link/config.yml" is true:
+        set {_config} to "plugins/Diskord-Link/config.yml"
+        #    Load du fichier de config !
+        if 1 = 1:
+            #    Config musique true / false
+            set {diskordlink.config.music-bot} to yaml value "music-bot" from file "%{_config}%"
+            #    Version de la config !
+            set {diskordlink.version} to yaml value "version" from file "%{_config}%"
+            #    Infos sur le bot et serveur !
+            set {diskordlink.bot.token} to yaml value "token" from file "%{_config}%"
+            set {diskordlink.bot.id} to yaml value "bot-id" from file "%{_config}%"
+            set {diskordlink.bot.pseudo} to yaml value "bot-pseudo" from file "%{_config}%"
+            set {diskordlink.bot.game} to yaml value "bot-game" from file "%{_config}%"
+            set {diskordlink.server.id} to yaml value "server-id" from file "%{_config}%"
+            #    Infos salon gestion (!reg)
+            set {diskordlink.channel.gestion} to yaml value "salon-gestion-id" from file "%{_config}%"
+            set {diskordlink.channel.gestion.name} to yaml value "salon-gestion-nom" from file "%{_config}%"
+            set {diskordlink.channel.gestion.topic} to yaml value "salon-gestion-topic" from file "%{_config}%"
+            #    Infos salon chat (liaison chat Discord - MC)
+            set {diskordlink.channel.chat} to yaml value "salon-minecraft-id" from file "%{_config}%"
+            set {diskordlink.channel.chat.nom} to yaml value "salon-minecraft-nom" from file "%{_config}%"
+            set {diskordlink.channel.chat.topic} to yaml value "salon-minecraft-topic" from file "%{_config}%"
+            #    Infos sur les salons musiques (Vocal & Contrôle musique)
+            if {diskordlink.config.music-bot} is true:
+                set {diskordlink.channel.music} to yaml value "salon-musique-id" from file "%{_config}%"
+                set {diskordlink.channel.music.name} to yaml value "salon-musique-nom" from file "%{_config}%"
+                set {diskordlink.channel.music.topic} to yaml value "salon-musique-topic" from file "%{_config}%"
+                set {diskordlink.channel.voice.musique} to yaml value "voice-musique-id" from file "%{_config}%"
+                set {diskordlink.channel.voice.musique.name} to yaml value "voice-musique-nom" from file "%{_config}%"
+            #    Configuration diverses
+            set {diskordlink.enabled.eval} to yaml value "command-eval-enabled" from file "%{_config}%" parsed as boolean
+            set {diskordlink.role.admin} to yaml value "admin-role" from file "%{_config}%"
+            set {diskordlink.info.informations} to yaml value "informations" from file "%{_config}%"
+            set {diskordlink.info.nom-serveur} to yaml value "nom-serveur" from file "%{_config}%"
+            set {diskordlink.info.site-internet} to yaml value "site-internet" from file "%{_config}%"
+            set {diskordlink.info.proprietaire} to yaml value "proprietaire" from file "%{_config}%"
+            set {diskordlink.info.ip-serveur} to yaml value "ip-serveur" from file "%{_config}%"
+            #    Configuration des logs de join / leave
+            set {diskordlink.config.use.join.notif} to yaml value "join-notif" from file "%{_config}%"
+            if {diskordlink.config.use.join.notif} is true:
+                set {diskordlink.config.join-message} to yaml value "join-message" from file "%{_config}%"
+            set {diskordlink.config.use.quit.notif} to yaml value "quit-notif" from file "%{_config}%"
+            if {diskordlink.config.use.quit.notif} is true:
+                set {diskordlink.config.quit-message} to yaml value "quit-message" from file "%{_config}%"
+            #    Commandes custom pour la gestion de la musique
+            if {diskordlink.config.music-bot} is true:
+                set {_list} to yaml value "commands-current" from file "%{_config}%"
+                set {diskordlink.command.music.current-song::*} to {_list} split at ", "
+                set {_list} to yaml value "commands-play" from file "%{_config}%"
+                set {diskordlink.command.music.play-song::*} to {_list} split at ", "
+                set {_list} to yaml value "commands-pause" from file "%{_config}%"
+                set {diskordlink.command.music.pause::*} to {_list} split at ", "
+                set {_list} to yaml value "commands-resume" from file "%{_config}%"
+                set {diskordlink.command.music.resume::*} to {_list} split at ", "
+                set {_list} to yaml value "commands-stop" from file "%{_config}%"
+                set {diskordlink.command.music.stop::*} to {_list} split at ", "
+                set {_list} to yaml value "commands-disconnect" from file "%{_config}%"
+                set {diskordlink.command.music.disconnect::*} to {_list} split at ", "
+                set {_list} to yaml value "commands-summom" from file "%{_config}%"
+                set {diskordlink.command.music.summom::*} to {_list} split at ", "
+                set {_list} to yaml value "commands-skip" from file "%{_config}%"
+                set {diskordlink.command.music.skip::*} to {_list} split at ", "
+                set {_list} to yaml value "commands-playliste" from file "%{_config}%"
+                set {diskordlink.command.music.playliste::*} to {_list} split at ", "
+                set {_list} to yaml value "commands-volume" from file "%{_config}%"
+                set {diskordlink.command.music.volume::*} to {_list} split at ", "
+                set {_list} to yaml value "commands-clear" from file "%{_config}%"
+                set {diskordlink.command.music.clear::*} to {_list} split at ", "
+        wait 1 tick
+        send "{@prefix} <green>BOT chargé<light red>, <gold>Version <green>%{diskordlink.version}%" to console
+    else:
+        send "{@prefix} <red>ERROR<light red>, <gold>Fichier de Configuration introuveable" to console
+#
+
+#==========================================================================================================#
+# -------------------------------------------------------------------------------------------------------- #
+#                                               CHAT MC - DISCORD                                          #
+# -------------------------------------------------------------------------------------------------------- #
+#==========================================================================================================#
+
+on guild message receive seen by "AdminBot":
+    set {_discord.nick} to DiscordNick(event-user)
+    set {_discord.id} to id of event-user
+    set {_msg} to event-string
+
+    if event-channel is "%{diskordlink.channel.chat}%":
+        if event-string starts with "!reg ":
+            discord delete message event-message with "AdminBot"
+            set {_reg} to event-string
+            replace all "!reg " with "" in {_reg}
+            set {_reg} to {_reg} parsed as int
+            set {_tag} to discord mention tag of event-user
+            loop all players:
+                if {token.%uuid of loop-player%} is {_reg}:
+                    send message "%{_tag}%, est maintenant relié à **%loop-player%**." to channel event-channel as "AdminBot"
+                    MsgMcDiskord(loop-player, 3, ": &|&  Votre compte minecraft est désormais relié à &|&  %{_discord.nick}%", "red &|& gold &|& green")
+                    #    Set des informations pour la liaison
+                    set {diskordlink.user.isreg.%loop-player%} to true
+                    set {diskordlink.user.%loop-player%.nick} to "%{_discord.nick}%"
+                    set {diskordlink.user.%loop-player%.id} to "%{_discord.id}%"
+                    set {diskordlink.user.%loop-player%.uuid} to "%uuid of loop-player%"
+                    set {diskordlink.user.%{_discord.id}%.name} to "%loop-player%"
+
+        else:
+            discord delete message event-message with "AdminBot"
+            if {diskordlink.user.isreg.%{diskordlink.user.%{_discord.id}%.name}%} is not set:
+                send discord message of "Vous n'avez pas renseigné de joueur minecraft sur cette utilisateur" to "%{_discord.id}%" with "AdminBot"
+                send discord message of "Faites `/discord reg` sur le serveur" to "%{_discord.id}%" with "AdminBot"
+            else:
+                set {_Mc.msg} to event-string
+                set {_Mc.discord} to event-string
+                set {_Mc.Nick} to {diskordlink.user.%{_discord.id}%.name}
+
+                replace all "`" with "'" in {_Mc.discord}
+                loop {char.color.remove::*}:
+                    replace all loop-value with "" in {_Mc.Nick}
+                    replace all loop-value with "" in {_Mc.discord}
+                send message "**%{_Mc.Nick}%** » %{_Mc.discord}%" to channel "%{diskordlink.channel.chat}%" as "AdminBot"
+                loop all players:
+                    MsgMcDiskord(loop-player, 3, " %{_Mc.Nick}% &|& : &|&  %{_Mc.msg}%", "aqua &|& red &|& white")
+#
+
+on chat:
+    if {diskordlink.user.isreg.%player%} is true:
+        set {_name} to display name of player
+        set {_name} to colored {_name}
+        set {_msg} to message
+        set {_msg} to colored {_msg}
+        loop {char.color.remove::*}:
+            replace all loop-value with "" in {_name}
+            replace all loop-value with "" in {_msg}
+        replace all "`" with "'" in {_msg}
+        send message "**%{_name}%** » %{_msg}%" to channel "%{diskordlink.channel.chat}%" as "AdminBot"
+    else:
+        set {_name} to display name of player
+        set {_name} to colored {_name}
+        set {_msg} to message
+        set {_msg} to colored {_msg}
+        loop {char.color.remove::*}:
+            replace all loop-value with "" in {_name}
+            replace all loop-value with "" in {_msg}
+        replace all "`" with "'" in {_msg}
+        send message "[Guest] **%{_name}%** » %{_msg}%" to channel "%{diskordlink.channel.chat}%" as "AdminBot"
+#
+command /discord [<text>] [<player>]:
+    trigger:
+        if arg 1 is empty:
+            if player has permission "discord.see.link.other":
+                send "&cSyntaxe: &6/discord &e(&areg&b|&ais-reg &c<player>&b|&areset&e)"
+            else:
+                send "&cSyntaxe: &6/discord &e(&areg&b|&areset&e)"
+        if arg 1 is "reg":
+            set {token.%uuid of player%} to a random integer between 1000 and 9999
+            if "%{tokenlist::*}%" contains "%{token.%uuid of player%}%":
+                set {token.%uuid of player%} to a random integer between 1000 and 9999
+            else:
+                add {token.%uuid of player%} to {tokenlist::*}
+                send "&6Votre Token est le &b%{token.%uuid of player%}%&c, &6il est valable pour 5 minutes"
+                send "&6Sur le canale '&b%{diskordlink.channel.gestion.name}%&6'&c,&6 écrivez juste &a!reg &c%{token.%uuid of player%}%"
+                wait 5 minutes
+                remove {token.%uuid of player%} from {tokenlist::*}
+                delete {token.%uuid of player%}
+        if arg 1 is "is-reg":
+            if arg 2 is not empty:
+                if player has permission "discord.see.link.other":
+                    set {_name} to arg 2
+                else:
+                    send "&cVous n'avez pas la permission de visionner les autres joueurs"
+            else:
+                set {_name} to player
+            if {diskordlink.user.isreg.%{_name}%} is true:
+                send "&c%{_name}% &2est bien enregistré"
+            else:
+                send "&b%{_name}% &cn'est pas enregistré"
+        if arg 1 is "reset":
+            if {diskordlink.user.isreg.%player%} is true:
+                delete {diskordlink.user.isreg.%player%}
+                delete {diskordlink.user.%player%.nick}
+                delete {diskordlink.user.%player%.uuid}
+                delete {diskordlink.user.%{diskordlink.user.%player%.id}%.name}
+                delete {diskordlink.user.%player%.id}
+                MsgMcDiskord(player, 1, " Votre compte &9Discord&2 a été délié", "green")
+            else:
+                MsgMcDiskord(player, 1, " Vous n'avez pas de compte lié", "red")
+
+
+#==========================================================================================================#
+# -------------------------------------------------------------------------------------------------------- #
+#                                            COMMANDES NORMALES                                            #
+# -------------------------------------------------------------------------------------------------------- #
+#==========================================================================================================#
+
+on guild message receive seen by "AdminBot":
+    set {_msg} to event-string
+    set {_c::*} to event-string split at " "
+    set {_avatar} to avatar url of "%{diskordlink.bot.admin}%"
+    replace all "%{_c::1}% " with "" in {_msg}
+
+    if event-string starts with "!":
+        discord delete message event-message with "AdminBot"
+
+    # STATS / BOT
+    if event-string starts with "!stats" or "!bot":
+        set {_runtime} to uptime of user "AdminBot"
+        #set {_join} to join discord date of user "%{diskordlink.bot.admin}%"
+
+        make embed "BotInfo"
+        set author of embed "BotInfo" to embed titled "Informations sur %{diskordlink.bot.admin.pseudo}%", with hyperlink "https://skript-mc.fr/forum/resources/659/", iconurl "http://i.imgur.com/DC8ykZv.png"
+        add field "Nom", with value "%{diskordlink.bot.admin.pseudo}%", split true to embed "BotInfo"
+        add field "Developpeurs", with value "[Tutur1004 & Polymeth - DiskordLink](https://skript-mc.fr/forum/resources/659/)", split true to embed "BotInfo"
+        add field "Connecté depuis", with value "%{_runtime}%", split true to embed "BotInfo"
+        #add field "Ajouté le", with value "%{_join}%", split true to embed "BotInfo"
+        add field "Version", with value "{@version}", split true to embed "BotInfo"
+
+        set color of embed "BotInfo" to "white"
+        set thumbnail of embed "BotInfo" to "%{_avatar}%"
+        set footer of embed "BotInfo" to "DiSKord-Link {@version} by Tutur1004 & Polymeth"
+        send embed "BotInfo" to channel event-channel with "AdminBot"
+        clear embed "BotInfo"
+
+    # CLEVERBOT (api to be updated)
+    if event-string starts with "!cleverbot":
+        notAvailableEmbed(event-channel, {_c::1})
+
+    # SERVER INFO
+    if event-string starts with "!server ":
+        discord delete message event-message with "AdminBot"
+        if "%{diskordlink.info.informations}%" is not "true":
+            stop trigger
+        make embed "ServerInfo"
+        set author of embed "ServerInfo" to embed titled "Informations Discord et Minecraft", with hyperlink "%{diskordlink.info.site-internet}%", iconurl "http://i.imgur.com/DC8ykZv.png"
+        add field "Nom", with value "[%{diskordlink.info.nom-serveur}%](%{diskordlink.info.site-internet}%)", split true to embed "ServerInfo"
+        add field "Dirigeant", with value "%{diskordlink.info.proprietaire}%", split true to embed "ServerInfo"
+        add field "IP du serveur", with value "%{diskordlink.info.ip-serveur}%", split true to embed "ServerInfo"
+
+        set color of embed "ServerInfo" to "white"
+        send embed "ServerInfo" to channel event-channel with "AdminBot"
+        clear embed "ServerInfo"
+
+    # LET ME GOOGLE THAT FOR YOU
+    if event-string starts with "!lmgtfy ":
+        replace all " " with "+" in {_msg}
+        set {_user} to DiscordNick("%event-user%")
+
+        make embed "lmgtfyEmbed"
+        set author of embed "lmgtfyEmbed" to embed titled "Let Me Google That For You", with hyperlink "https://lmgtfy.com/", iconurl "https://lmgtfy.com/assets/sticker-b222a421fb6cf257985abfab188be7d6746866850efe2a800a3e57052e1a2411.png"
+        set description of embed "lmgtfyEmbed" to "Lien généré par %{_user}% : http://lmgtfy.com/?q=%{_msg}%"
+        set color of embed "lmgtfyEmbed" to "blue"
+        send embed "lmgtfyEmbed" to channel event-channel with "AdminBot"
+        clear embed "lmgtfyEmbed"
+
+    # PING
+    if event-string starts with "!ping":
+        send ping to channel event-channel as "AdminBot"
+
+
+#==========================================================================================================#
+# -------------------------------------------------------------------------------------------------------- #
+#                                                 COMMANDES ADMINS                                         #
+# -------------------------------------------------------------------------------------------------------- #
+#==========================================================================================================#
+
+on guild message receive seen by "AdminBot":
+    set {_msg} to event-string
+    set {_c::*} to event-string split at " "
+    replace all "%{_c::1}% " with "" in {_msg}
+
+    if user event-user has role "%{diskordlink.role.admin}%" in event-guild:
+        if event-string starts with "!":
+            discord delete message event-message with "AdminBot"
+
+
+        # nick [string]
+        if event-string starts with "!nick ":
+            set nickname of user "%{diskordlink.bot.admin}%" to "%{_msg}%" with "AdminBot" in guild event-guild
+
+
+        # purge|clear [number]
+        if event-string starts with "!clear ":
+            if {_msg} parsed as number is less than 100:
+                purge {_msg} parsed as number messages in event-channel with "AdminBot"
+                adminEmbed(event-channel, {_c::1}, "%{_msg}% messages ont été effacé dans %event-channel%")
+
+
+        # game [string]
+        if event-string starts with "!game ":
+            set game of bot "AdminBot" to {_msg}
+            adminEmbed(event-channel, {_c::1}, "Le jeu du bot a été changé en '%{_msg}%'")
+
+        # say [string]
+        if event-string starts with "!say ":
+            send typing in channel event-channel with "AdminBot"
+            wait 2 seconds
+            adminEmbed(event-channel, {_c::1}, "%{_msg}%")
+
+        # sk reload (all|skript.sk)
+        if event-string starts with "!sk reload ":
+            replace all "reload" with "" in {_msg}
+            make console execute command "sk reload %{_msg}%"
+            adminEmbed(event-channel, {_c::1}, "%{_msg}% a bien été reload")
+
+
+        # eval (skript line)
+        if event-string starts with "!eval ":
+            if "%{diskordlink.enabled.eval}%" is "true":
+                adminEmbed(event-channel, {_c::1}, "Evaluation de `%{_msg}%` en cours")
+                wait 1 tick
+                evaluate "%{_msg}%"
+
+        # cmd [cmd]
+        # Pour exécuter une commande MC via discord
+        if event-string starts with "!cmd ":
+            make console execute command "%{_msg}%"
+            adminEmbed(event-channel, {_c::1}, "La commande `%{_msg}%` a été executée")
+
+
+#==========================================================================================================#
+# -------------------------------------------------------------------------------------------------------- #
+#                                                 SYSTEME REPORT                                           #
+# -------------------------------------------------------------------------------------------------------- #
+#==========================================================================================================#
+
+on guild message receive seen by "AdminBot":
+    if event-string starts with "!report ":
+        set {_user} to DiscordNick("%event-user%")
+        set {_msg} to event-string
+        set {_temp::*} to {_msg} split at " "
+        if {_temp::2} is not "close" or "info" or "about":
+            if {reports.amount} is not set:
+                set {reports.amount} to 1
+            else:
+                add 1 to {reports.amount}
+
+            replace all "!report " with "" in {_msg}
+            set {_temp::*} to {_msg} split at " "
+            set {reports.%{reports.amount}%.aimed} to {_temp::1}
+            replace all "%{reports.%{reports.amount}%.aimed}%" with "" in {_msg}
+            set {reports.%{reports.amount}%.object} to {_temp::2}
+            set {reports.%{reports.amount}%.sender} to {_user}
+            set {reports.%{reports.amount}%.ID} to {reports.amount}
+            set {reports.%{reports.amount}%.status} to "Ouvert"
+            ReportEmbed("%{reports.amount}%" parsed as int, "%{reports.%{reports.amount}%.object}%", "%{reports.%{reports.amount}%.aimed}%", "%{reports.%{reports.amount}%.sender}%", "%{reports.%{reports.amount}%.status}%", false)
+
+
+    if event-string starts with "!report close ":
+        if user event-user has role "%{diskordlink.role.admin}%" in event-guild:
+            set {_msg} to event-string
+            replace all "!report close " with "" in {_msg}
+
+            set {_temp::*} to {_msg} split at " "
+
+            if {reports.%{_temp::1}%.ID} is set:
+                if {reports.%{_temp::1}%.status} is "Ouvert":
+
+                    set {_id} to {_temp::1}
+                    replace all "%{_temp::1}%" with "" in {_msg}
+                    set {reports.%{_id}%.close.sanction} to {_msg}
+
+                    set {reports.%{_id}%.status} to "Fermé"
+                    ReportEmbed("%{_id}%" parsed as int, "%{reports.%{_id}%.object}%", "%{reports.%{_id}%.aimed}%", "%{reports.%{_id}%.sender}%", "%{reports.%{_id}%.status}%", true)
+
+
+#==========================================================================================================#
+# -------------------------------------------------------------------------------------------------------- #
+#                                                    MUSIQUE                                               #
+# -------------------------------------------------------------------------------------------------------- #
+#==========================================================================================================#
+
+on guild message receive seen by "AdminBot":
+
+    set {_discord.name} to DiscordNick("%event-user%")
+    set {_discord.id} to event-user
+    set {_msg} to event-string
+    set {_currenttrack} to track player "AdminBot" is playing
+
+
+    if {diskordlink.config.music-bot} is true:
+        if event-channel is {diskordlink.channel.music}:
+            discord delete message event-message with "AdminBot"
+            set {_ch.music} to {diskordlink.channel.music}
+#
+#
+            #    COMMANDE : !current Musique
+            loop {diskordlink.command.music.current-song::*}:
+                if event-string is "!%loop-value%":
+                    if bot "AdminBot" is playing audio:
+                        currentembed("%{diskordlink.channel.music}%")
+                    else:
+                        send message "Le bot ne joue rien actuellement." to channel event-channel as "AdminBot"
+#
+#
+            #    COMMANDE : !play
+            loop {diskordlink.command.music.play-song::*}:
+                if event-string starts with "!%loop-value% ":
+                    broadcast "%{diskord.song.load}%"
+                    if {diskord.song.load} is true:
+                        stop trigger
+                    if event-bot is in a voice channel:
+                        delete {_xD}
+                    else:
+                        discord join voice channel "%{diskordlink.channel.voice.musique}%" with "AdminBot"
+                    set {_msg.current} to event-string
+                    replace all "!play " with "" in {_msg.current}
+                    set {_msg.current::*} to {_msg.current} split at "&"
+                    set {_msg.current} to {_msg.current::1}
+                    set {_tag} to discord mention tag of event-user
+                    if "%{_msg.current}%" contains "playlist":
+                        send message "%{_tag}%, les playlistes ne sont pas autorisés pour le moment!" to channel event-channel as "AdminBot"
+                        stop trigger
+                    if "%{_msg.current}%" do not contain "://":
+                        send message "%{_tag}%, le bot n'accepte que des liens YouTube et autres sites musicals!" to channel event-channel as "AdminBot"
+                        stop trigger
+                    play audio "%{_msg.current}%" with player "AdminBot"
+                    set {diskord.song.load} to true
+                    discord send typing in channel event-channel with "AdminBot"
+                    wait 2 second
+                    delete {diskord.song.load}
+                    set {_list::*} to queue of player "AdminBot"
+                    set {_last} to the last element out of {_list::*}
+                    set {_currenttrack} to track player "AdminBot" is playing
+                    send message "%{_tag}%, votre musique vient d'être ajoutée à la queue!" to channel event-channel as "AdminBot"
+                    if "%{_last}%" = "<none>":
+                        set {diskordlink.track.auteur::%{_currenttrack}%} to {_discord.name}
+                        set {diskordlink.track.link::%{_currenttrack}%} to {_msg.current}
+                        set {diskordlink.track.auteur.id::%{_currenttrack}%} to {_discord.id}
+                    else:
+                        set {diskordlink.track.auteur::%{_last}%} to {_discord.name}
+                        set {diskordlink.track.link::%{_last}%} to {_msg.current}
+                        set {diskordlink.track.auteur.id::%{_last}%} to {_discord.id}
+                        send message "`%title of track {_last}%` a été mis en file d'attente!" to channel event-channel as "AdminBot"
+#
+#
+            #     AUDIO : Pause
+            loop {diskordlink.command.music.pause::*}:
+                if event-string starts with "!%loop-value%":
+                    set audio player "AdminBot" audio paused state to true
+            #     AUDIO : Resume
+            loop {diskordlink.command.music.resume::*}:
+                if event-string starts with "!%loop-value%":
+                    set audio player "AdminBot" audio paused state to false
+#
+#
+            #     AUDIO : Skip
+            loop {diskordlink.command.music.skip::*}:
+                if event-string starts with "!%loop-value%":
+                    if {diskordlink.skip.load} is true:
+                        stop trigger
+                    if bot "AdminBot" is playing audio:
+                        send message "**%title of track {_currenttrack}%** a été skip." to channel event-channel as "AdminBot"
+                        skip current track player "AdminBot" is playing
+                    else:
+                        send message "Le bot ne joue rien et ne peut rien skip." to channel event-channel as "AdminBot"
+#
+#
+            # AUDIO : Volume
+#            loop {diskordlink.command.music.volume::*}:
+#                if event-string starts with "!%loop-value% ":
+#                    replace all "!%loop-value% " with "" in {_msg}
+#                    replace all "%%" with "" in {_msg}
+#                    replace all " " with "" in {_msg}
+#                    if {_msg} parsed as number is not less than 1:
+#                        if {_msg} parsed as number is not greater than 100:
+#                            set {_msg} to "%{_msg}%" parsed as number
+#                            set {_vol} to round({_msg} * 1.5)
+#                            set {_vol} to "%{_vol}%" parsed as integer
+#                            set audio player "AdminBot" volume to {_vol}
+#                            send message "Le volume du bot est désormais à %{_msg}%%%" to channel event-channel as "AdminBot"
+#
+#
+            # AUDIO : Disconnect
+            loop {diskordlink.command.music.disconnect::*}:
+                if event-string starts with "!%loop-value%":
+                    discord leave voice channel "%{diskordlink.channel.voice.musique}%" with "AdminBot"
+                    send message "Le bot s'est deconnecté du canal musical." to channel event-channel as "AdminBot"
+#
+#
+            loop {diskordlink.command.music.clear::*}:
+                if event-string starts with "!%loop-value%":
+                    if bot event-bot is playing audio:
+                        reset audio player "AdminBot"
+                        send message "La playliste a bien été clear." to channel event-channel as "AdminBot"
+#
+#
+            # AUDIO : Playlist
+            loop {diskordlink.command.music.playliste::*}:
+                if event-string starts with "!%loop-value%":
+                    if bot "AdminBot" is playing audio:
+                        set {_list::*} to queue of player "AdminBot"
+                        set {_count} to 0
+                        loop {_list::*}:
+                            add 1 to {_count}
+                        if {_count} is 0:
+                            send message "Aucune musique n'est prévue après celle en cours." to channel event-channel as "AdminBot"
+                            stop trigger
+
+                        set {_list::*} to queue of player "AdminBot"
+                        set {_count} to 0
+                        loop {_list::*}:
+                            add 1 to {_count}
+                        clear embed "Playlist"
+                        make embed "Playlist"
+                        set author of embed "Playlist" to embed titled "Musiques à venir :", with hyperlink "https://skript-mc.fr/forum/resources/659/", iconurl "http://i.imgur.com/3UXmVeH.png"
+                        set {_time} to 0
+                        set {_pos} to 0
+                        set {_mins} to 0
+                        #Boucle de l'embed
+                        loop {_list::*}:
+                            add 1 to {_pos}
+                            set {_title} to lowString("%title of track loop-value-2%")
+                            add field "Musique %{_pos}% de %{_count}%", with value "[%{_title}%](%{diskordlink.track.link::%loop-value-2%}%)", split true to embed "Playlist"
+                            add field "Proposée par", with value "%{diskordlink.track.auteur::%loop-value-2%}%", split true to embed "Playlist"
+                            add field "Durée", with value "%duration of track loop-value-2%", split true to embed "Playlist"
+                            set {_duration} to duration of track loop-value-2
+                            set {_split::*} to {_duration} split at ":"
+                            set {_loop} to 0
+                            loop {_split::*}:
+                                add 1 to {_loop}
+                            set {_a} to "%{_split::1}%" parsed as number
+                            set {_b} to "%{_split::2}%" parsed as number
+                            set {_c} to "%{_split::3}%" parsed as number
+                            if {_loop} = 1:
+                                add {_a} to {_secs}
+                            else if {_loop} = 2:
+                                add {_a} to {_mins}
+                                add {_b} to {_secs}
+                            else:
+                                add {_a} to {_H}
+                                add {_b} to {_mins}
+                                add {_c} to {_secs}
+                        loop 100000 times:
+                            if {_mins} > 59:
+                                remove 60 from {_mins}
+                                add 1 to {_h}
+                            else:
+                                stop loop
+                        loop 100000 times:
+                            if {_secs} > 59:
+                                remove 60 from {_secs}
+                                add 1 to {_mins}
+                            else:
+                                stop loop
+                        set color of embed "Playlist" to "orange"
+                        if {_H} > 0:
+                            if {_secs} < 10:
+                                set footer of embed "Playlist" to "La playliste est actuellement de %{_H}%:%{_mins}%:0%{_secs}%"
+                            else:
+                                set footer of embed "Playlist" to "La playliste est actuellement de %{_H}%:%{_mins}%:%{_secs}%"
+                        else:
+                            if {_secs} < 10:
+                                set footer of embed "Playlist" to "La playliste est actuellement de %{_mins}%:0%{_secs}%"
+                            else:
+                                set footer of embed "Playlist" to "La playliste est actuellement de %{_mins}%:%{_secs}%"
+                        send embed "Playlist" to channel "%{diskordlink.channel.music}%" with "AdminBot"
+                        stop trigger
+                    else:
+                        send message "Le bot ne joue rien actuellement, il n'y a pas de playliste" to channel event-channel as "AdminBot"
+#
+
+discord track begin by player "AdminBot":
+    purge 50 messages in {diskordlink.channel.music} with "AdminBot"
+    set {diskordlink.skip.load} to true
+    wait 2 second
+    set {_current} to track player "AdminBot" is playing
+    set {_tag} to discord mention tag of "%{diskordlink.track.auteur.id::%{_current}%}%"
+    send message "%{_tag}%, votre musique est actuellement en lecture dans **%{diskordlink.channel.voice.musique.name}%**!" to channel {diskordlink.channel.music} as "AdminBot"
+    delete {diskordlink.skip.load}
+    currentembed("%{diskordlink.channel.music}%")
+    if "%{diskordlink.bot.game}%" is "<music>":
+        discord set game of bot "AdminBot" to "Musique"
+#
+
+
+
+#==========================================================================================================#
+# -------------------------------------------------------------------------------------------------------- #
+#                                                COMMANDES DEBUG                                           #
+# -------------------------------------------------------------------------------------------------------- #
+#==========================================================================================================#
+
+on guild message receive seen by "AdminBot":
+    set {_msg} to event-string
+    set {_c::*} to event-string split at " "
+    replace all "%{_c::1}% " with "" in {_msg}
+
+    if event-string starts with "!version":
+        if id of event-user is "184030813778608128" or "194050286535442432":
+            make embed "versionEmbed"
+            set title of embed "versionEmbed" to "Debug - Version"
+            add field "Version Spigot", with value "%minecraft version%", split true to embed "versionEmbed"
+            add field "Version Skript", with value "%skript version%", split true to embed "versionEmbed"
+            add field "Version Vixio", with value "%version of ""Vixio""%", split true to embed "versionEmbed"
+            add field "Version DiskordLink", with value "{@version}", split true to embed "versionEmbed"
+            add field "Version skQuery", with value "%version of ""SkQuery""%", split true to embed "versionEmbed"
+            add field "Version skUtilities", with value "%version of ""skUtilities""%", split true to embed "versionEmbed"
+
+            set color of embed "versionEmbed" to "white"
+            set footer of embed "versionEmbed" to "Les commandes de debug nous permettent de mieux vous aider"
+            send embed "versionEmbed" to channel event-channel with "AdminBot"
+            clear embed "versionEmbed"
+        else:
+            noPermissionEmbed(event-channel, {_c::1})
+
+    else if event-string starts with "!debug":
+        if id of event-user is "184030813778608128" or "194050286535442432":
+            evaluate "%{_msg}%"
+        else:
+            noPermissionEmbed(event-channel, {_c::1})
+
+
+
+#==========================================================================================================#
+# -------------------------------------------------------------------------------------------------------- #
+#                                                   SALON GESTION                                          #
+# -------------------------------------------------------------------------------------------------------- #
+#==========================================================================================================#
+
+on guild message receive seen by "AdminBot":
+    if name of event-channel is "%{diskordlink.channel.gestion}%":
+        discord delete message event-message  with "AdminBot"
+
+#    Information de connection / déconection au serveur Minecraft (affichage discord)
+on join:
+    if {diskordlink.config.use.join.notif} is true:
+        set {_msg} to "%{diskordlink.config.join-message}%"
+        replace all "<pseudo>" with "**%uncolored display name of player%**" in {_msg}
+        send message "%{_msg}%" to channel "%{diskordlink.channel.chat}%" as "AdminBot"
+#
+on quit:
+    if {diskordlink.config.use.quit.notif} is true:
+        set {_msg} to "%{diskordlink.config.quit-message}%"
+        replace all "<pseudo>" with "**%uncolored display name of player%**" in {_msg}
+        send message "%{_msg}%" to channel "%{diskordlink.channel.chat}%" as "AdminBot"
+#
