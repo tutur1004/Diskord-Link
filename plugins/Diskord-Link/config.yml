@@ -1,0 +1,144 @@
+version: "4.0"
+#=====================================#
+#    CONFIGURATION DISKORDLINK 4.1    #
+#=====================================#
+# DiskordLink by Tutur1004 & Polymeth #
+
+# IMPORTANT: Il faut absolument remplir tout ce qui est à remplir, sans quoi le bot ne marchera pas
+# IMPORTANT: Les noms des salons de doivent pas contenir de caractères spéciaux (é, @, etc.) ou d'espaces. Testez les noms sur discord si besoin.
+# En cas de soucis, veuillez vous référer au tutoriel présent sur la page de la ressource sur skript-mc.fr --> https://skript-mc.fr/forum/resources/659/
+# N'oubliez pas qu'un discord est disponible afin d'obtenir de l'aide : https://discord.gg/KfB8fkG
+
+# RAPPEL: Les ID sont trouvables en activant le mode développeur et en faisant clique droit sur l'utilisateur / salon / server puis "Copier l'ID"
+
+
+#======== Paramètres principals ========#
+
+# Token du bot trouvable sur le panel developpeur de Discord
+token: "METTRE_TOKEN"
+
+# ID du serveur discord
+server-id: "METTRE_ID"
+
+
+#======== Paramètres du bot ========#
+
+# ID du bot discord
+bot-id: "METTRE_ID"
+
+# Pseudonyme visible du bot, notez qu'il aura écrit [BOT] en plus à côté
+bot-pseudo: "DiSKordBot" 
+
+# Mettre un message custom sur le jeu du bot "Joue à ..." mettez <music> pour que le bot notifie qu'il joue de la musique
+#                                                         mettez <current> pour afficher la musique en cours de lecture
+bot-game: "<music>" 
+
+#======== Paramètres des salons ========#
+# RAPPEL: Testez en créant un salon sur votre discord les noms, car les caractères spéciaux et espaces feront crashés votre serveur Minecraft
+
+       #=== Salons Textuels ===#
+# ID du salon de gestion
+# INFO: Le salon de gestion est un salon pour le bot où sont affichés les join / leave et quelques autres informations données par le bot
+salon-gestion-id: "METTRE_ID"
+
+# Nom du salon de gestion
+salon-gestion-nom: "Gestion-minecraft"
+
+# Info sur le salon de gestion
+salon-gestion-topic: "Salons d'inscriptions, faites /discord reg sur Minecraft"
+
+# ID du salon de chat
+# INFO: Le salon de chat est l'endroit où le chat Minecraft -> Discord et Discord -> Minecraft est disponible.
+salon-minecraft-id: "METTRE_ID"
+
+# Nom du salon de chat
+salon-minecraft-nom: "chat mc"
+
+# Info sur le salon de gestion
+salon-minecraft-topic: "Chat entre MC et Discord"
+
+# Autoriser les fonctions vocales du bot
+# Note, si false pas besoin de remplir tous les champs liés à la musique
+music-bot: true
+
+
+# ID du salon de gestion du bot de musique
+# INFO: Le salon de gestion du bot de musique permet d'intéragir avec les fonctions musique
+salon-musique-id: "METTRE_ID"
+
+# Nom du salon de chat
+salon-musique-nom: "musique"
+
+# Info sur le salon de musique
+salon-musique-topic: "!play [URL] pour ajouter une musique"
+
+#      #=== Salons vocaux ===#
+# ID du salon de Lecture de la musique (Peut contenir espaces et majuscules + emojis)
+# INFO: Le salon ou le bot doit jouer la musique
+voice-musique-id: "METTRE_ID"
+
+# Nom du salon de Musique
+voice-musique-nom: "Musique :musical_note:"
+
+#======== Paramètres des permissions ========#
+
+# Nom du rôle pour les commandes admins sur le discord
+# IMPORTANT: Le nom du rôle doit correspondre à la lettre à celui voulu sur le discord. Si le rôle est "Modo", il faut bien mettre "Modo" et pas "modo"
+admin-role: "Admin"
+
+
+#======== Commandes musicales ========#
+# IMPORTANT: Les commandes ne doivent pas avoir le signe ! (signe d'une commande) ici (il est inclu de base) et ne doivent être une commande qui existe déjà
+# IMPORTANT: Vos commandes doivent bien avoir le pattern [commande1], [commande2], etc...
+# INFO: Si vous ne voulez qu'une commande mettez simplement [commande]
+
+#	Affiche des informations sur la musique actuelle
+commands-current: current, currentmusic
+#	Ajoute une musique à la liste (!<commande> [URL])
+commands-play: play, playmusic
+#	Mets la musique en pause
+commands-pause: pause, pausemusic
+#	Si la musique est en pause, relance la musique
+commands-resume: resume, resumemusic
+#	Arrête la musique
+commands-stop: stop, stopmusic
+#	Oblige le bot à se connecter au salon de musique même s'il n'y a pas de musique
+commands-summom: summom, joinmusic
+#	Deconnecte le bot du salon de musique
+commands-disconnect: disconnect, remove
+#	Passer à la musique suivante
+commands-skip: skip, skipmusic
+#	Afficher la liste des musiques en attente
+commands-playliste: playliste, playlist
+#	Changer le volume de la musique (en %)
+commands-volume: volume, setvolume, vol
+
+commands-clear: clearlist, clean
+
+
+#======== Autre ========#
+
+# Activer ou non la commande !eval qui test des lignes de skript pour les admins.
+# Attention: Celle ci peut être "dangereuse" (accès à tous les effets/expressions/etc skript) si vos admins ne sont pas de confiances.
+command-eval-enabled: false
+
+
+# Transmettre les messages de connections / déconnection au serveur (Minecraft) sur le serveur (Discord)
+# Pour les messages, notez que <pseudo> permet de mettre le displayname du joueur
+
+join-notif: false
+join-message: "<pseudo> join!"
+
+quit-notif: false
+quit-message: "<pseudo> disconnect"
+
+
+# Renseignements de pour votre serveur
+# Activer les informations ?
+informations: false
+# Attention, maximum 20 caractères.
+nom-serveur: TuturCraft
+# Mettre un http:// ou https://  #OBLIGE#
+site-internet: http://mon.url.fr
+proprietaire: Tutur le boss ;)
+ip-serveur: Mc.url.fr:25565
