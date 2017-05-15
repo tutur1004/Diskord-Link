@@ -15,6 +15,9 @@
 # -------------------------------------------------------------------------------------------------------- #
 #==========================================================================================================#
 
+options:
+    prefix: Diskord-Link
+
 function loginBot(name: text):
     # TODO: Ajouter les verifications de METTRE_ID
     login to user with token "%{diskordlink.bot.token}%" with name "AdminBot"
