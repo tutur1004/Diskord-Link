@@ -154,7 +154,7 @@ function lowString(string: text) :: text:
         add 1 to {_count}
     return "%{_return}%"
 #
-function notAvailableEmbed(channel: channel, command: text):
+function notAvailableEmbed(channel: text, command: text):
     make embed "notAvailable"
     set author of embed "notAvailable" to embed titled "Commande %{_command}%", with hyperlink "https://skript-mc.fr/forum/resources/659/", iconurl "http://i.imgur.com/jTktT84.png"
     set description of embed "notAvailable" to "Cette commande n'est pas disponible pour le moment"
@@ -162,7 +162,7 @@ function notAvailableEmbed(channel: channel, command: text):
     send embed "notAvailable" to channel {_channel} with "AdminBot"
     clear embed "notAvailable"
 #
-function noPermissionEmbed(channel: channel, command: text):
+function noPermissionEmbed(channel: text, command: text):
     make embed "noPermission"
     set author of embed "noPermission" to embed titled "Commande %{_command}%", with hyperlink "https://skript-mc.fr/forum/resources/659/", iconurl "http://i.imgur.com/HtGWqXY.png"
     set description of embed "noPermission" to "Vous n'avez pas la permission d'executer cette commande"
@@ -171,7 +171,7 @@ function noPermissionEmbed(channel: channel, command: text):
     send embed "noPermission" to channel {_channel} with "AdminBot"
     clear embed "noPermission"
 #
-function adminEmbed(channel: channel, command: text, value: text):
+function adminEmbed(channel: text, command: text, value: text):
     make embed "adminEmbed"
     set author of embed "adminEmbed" to embed titled "Commande %{_command}%", with hyperlink "https://skript-mc.fr/forum/resources/659/", iconurl "http://i.imgur.com/5GRmO4z.png"
     set description of embed "adminEmbed" to "%{_value}%"
@@ -179,7 +179,7 @@ function adminEmbed(channel: channel, command: text, value: text):
     send embed "adminEmbed" to channel {_channel} with "AdminBot"
     clear embed "adminEmbed"
 #
-function correctionEmbed(channel: channel, command: text, correct: text):
+function correctionEmbed(channel: text, command: text, correct: text):
     make embed "correctionEmbed"
     set author of embed "correctionEmbed" to embed titled "Commande inconnue : %{_command}%", with hyperlink "https://skript-mc.fr/forum/resources/659/", iconurl "http://i.imgur.com/Q6Cqenb.png"
     set description of embed "correctionEmbed" to "Vous ne voulez pas plutôt dire `%{_correct}%` ?"
