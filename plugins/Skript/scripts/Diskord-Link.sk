@@ -26,12 +26,12 @@ function loginBot(name: text):
     wait 1 seconds
     set {_status} to status of "%{diskordlink.bot.admin}%" in guild "%{diskordlink.server.id}%"
     if {_status} is "ONLINE":
-        send "{@prefix} &2Connexion du bot discord reussie. {@version}" to console
+        send "{@prefix} &2Connexion du bot discord reussie. %{diskordlink.version}%" to console
         set nickname of user with id "%{diskordlink.bot.admin}%" to "%{diskordlink.bot.admin.pseudo}%" with bot "AdminBot" in guild with id "%{diskordlink.server.id}%"
         if "%{diskordlink.bot.game}%" is not "<none>" or "<current>" or "<music>":
             discord set game of bot "AdminBot" to "%{diskordlink.bot.game}%"
     else:
-        send "{@prefix} &4Echec de connexion au bot discord. {@version}" to console
+        send "{@prefix} &4Echec de connexion au bot discord. %{diskordlink.version}%" to console
 
     set {diskord.song.load} to false
     #    La suite est coupée à cuase de bugs !
@@ -123,7 +123,9 @@ function MsgMcDiskord(p: player, size: integer, cmd: text, color: text):
         if {_count.color} = {_size}:
             set {_tellraw} to "tellraw %{_p}% [{""text"":""[DiSKord-Link]"",""color"":""blue"",""clickEvent"":{""action"":""open_url"",""value"":""https://skript-mc.fr/forum/resources/659/""}}"
             loop {_cmd.loop::*}:
-                set {_tellraw} to "%{_tellraw}%,{""text"":""%loop-value%"",""color"":""%{_color::%loop-index%}%""}"
+                set {_index} to "%loop-index" parsed as integer
+                set {_color} to "%{_color::%{_index}%}%" parsed as text
+                set {_tellraw} to "%{_tellraw}%,{""text"":""%loop-value%"",""color"":""%{_color}%""}"
             set {_tellraw} to "%{_tellraw}%]"
             execute console command "%{_tellraw}%"
         else:
@@ -207,7 +209,7 @@ function ReportEmbed(id: int, object: text, aimed: text, sender: text, status: t
     send embed "Report" to channel "%{diskordlink.channel.gestion}%" with "AdminBot"
 #
 function currentembed(t: text):
-    set {_currenttrack} to track player "AdminBot" is playing
+    set {_currenttrack} to track player "AdminBot" is playing in guild with id "{diskordlink.server.id}"
 
     set {_title} to lowString("%title of track {_currenttrack}%")
     set {_author} to lowString("%author of track {_currenttrack}%")
@@ -220,7 +222,7 @@ function currentembed(t: text):
     add field "Lien", with value "[%{_title}%](%{diskordlink.track.link::%{_currenttrack}%}%)", split true to embed "CurrentMusic"
     add field "En lecture", with value "%position of track {_currenttrack}%", split true to embed "CurrentMusic"
     add field "Proposée par", with value "%{diskordlink.track.auteur::%{_currenttrack}%}%", split true to embed "CurrentMusic"
-    set {_list::*} to queue of player "AdminBot"
+    set {_list::*} to queue of audio player "AdminBot" in guild "{diskordlink.server.id}"
     set {_last} to the last element out of {_list::*}
     if "%{_last}%" = "<none>":
         add field "À suivre", with value "Aucune musique à suivre", split true to embed "CurrentMusic"
@@ -270,7 +272,7 @@ on load:
     #    Lignes désactivées pour le moment !
 
     #    Recherche du fichier de Configuration.
-    if file existance of "plugins/Diskord-Link/config.yml" is true:
+    if file "plugins/Diskord-Link/config.yml" exists:
         set {_config} to "plugins/Diskord-Link/config.yml"
         #    Load du fichier de config !
         if 1 = 1:
@@ -482,11 +484,11 @@ on guild message receive seen by "AdminBot":
         add field "Developpeurs", with value "[Tutur1004 & Polymeth - DiskordLink](https://skript-mc.fr/forum/resources/659/)", split true to embed "BotInfo"
         add field "Connecté depuis", with value "%{_runtime}%", split true to embed "BotInfo"
         #add field "Ajouté le", with value "%{_join}%", split true to embed "BotInfo"
-        add field "Version", with value "{@version}", split true to embed "BotInfo"
+        add field "Version", with value "%{diskordlink.version}%", split true to embed "BotInfo"
 
         set color of embed "BotInfo" to "white"
         set thumbnail of embed "BotInfo" to "%{_avatar}%"
-        set footer of embed "BotInfo" to "DiSKord-Link {@version} by Tutur1004 & Polymeth"
+        set footer of embed "BotInfo" to "DiSKord-Link %{diskordlink.version}% by Tutur1004 & Polymeth"
         send embed "BotInfo" to channel event-channel with "AdminBot"
         clear embed "BotInfo"
 
@@ -643,7 +645,7 @@ on guild message receive seen by "AdminBot":
     set {_discord.name} to DiscordNick("%event-user%")
     set {_discord.id} to event-user
     set {_msg} to event-string
-    set {_currenttrack} to track player "AdminBot" is playing
+    set {_currenttrack} to track player "AdminBot" is playing in guild with id "{diskordlink.server.id}"
 
 
     if {diskordlink.config.music-bot} is true:
@@ -687,9 +689,9 @@ on guild message receive seen by "AdminBot":
                     discord send typing in channel event-channel with "AdminBot"
                     wait 2 second
                     delete {diskord.song.load}
-                    set {_list::*} to queue of player "AdminBot"
+                    set {_list::*} to queue of audio player "AdminBot" in guild "{diskordlink.server.id}"
                     set {_last} to the last element out of {_list::*}
-                    set {_currenttrack} to track player "AdminBot" is playing
+                    set {_currenttrack} to track player "AdminBot" is playing in guild with id "{diskordlink.server.id}"
                     send message "%{_tag}%, votre musique vient d'être ajoutée à la queue!" to channel event-channel as "AdminBot"
                     if "%{_last}%" = "<none>":
                         set {diskordlink.track.auteur::%{_currenttrack}%} to {_discord.name}
@@ -757,7 +759,7 @@ on guild message receive seen by "AdminBot":
             loop {diskordlink.command.music.playliste::*}:
                 if event-string starts with "!%loop-value%":
                     if bot "AdminBot" is playing audio:
-                        set {_list::*} to queue of player "AdminBot"
+                        set {_list::*} to queue of audio player "AdminBot" in guild "{diskordlink.server.id}"
                         set {_count} to 0
                         loop {_list::*}:
                             add 1 to {_count}
@@ -765,7 +767,7 @@ on guild message receive seen by "AdminBot":
                             send message "Aucune musique n'est prévue après celle en cours." to channel event-channel as "AdminBot"
                             stop trigger
 
-                        set {_list::*} to queue of player "AdminBot"
+                        set {_list::*} to queue of audio player "AdminBot" in guild "{diskordlink.server.id}"
                         set {_count} to 0
                         loop {_list::*}:
                             add 1 to {_count}
@@ -832,7 +834,7 @@ discord track begin by player "AdminBot":
     purge 50 messages in {diskordlink.channel.music} with "AdminBot"
     set {diskordlink.skip.load} to true
     wait 2 second
-    set {_current} to track player "AdminBot" is playing
+    set {_current} to track player "AdminBot" is playing in guild with id "{diskordlink.server.id}"
     set {_tag} to discord mention tag of "%{diskordlink.track.auteur.id::%{_current}%}%"
     send message "%{_tag}%, votre musique est actuellement en lecture dans **%{diskordlink.channel.voice.musique.name}%**!" to channel {diskordlink.channel.music} as "AdminBot"
     delete {diskordlink.skip.load}
@@ -861,7 +863,7 @@ on guild message receive seen by "AdminBot":
             add field "Version Spigot", with value "%minecraft version%", split true to embed "versionEmbed"
             add field "Version Skript", with value "%skript version%", split true to embed "versionEmbed"
             add field "Version Vixio", with value "%version of ""Vixio""%", split true to embed "versionEmbed"
-            add field "Version DiskordLink", with value "{@version}", split true to embed "versionEmbed"
+            add field "Version DiskordLink", with value "%{diskordlink.version}%", split true to embed "versionEmbed"
             add field "Version skQuery", with value "%version of ""SkQuery""%", split true to embed "versionEmbed"
             add field "Version skUtilities", with value "%version of ""skUtilities""%", split true to embed "versionEmbed"
 
