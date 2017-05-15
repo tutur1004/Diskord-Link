@@ -707,11 +707,11 @@ on guild message receive seen by "AdminBot":
             #     AUDIO : Pause
             loop {diskordlink.command.music.pause::*}:
                 if event-string starts with "!%loop-value%":
-                    set audio player "AdminBot" audio paused state to true
+                    set audio player "AdminBot" audio paused state to true in guild "%{diskordlink.server.id}%"
             #     AUDIO : Resume
             loop {diskordlink.command.music.resume::*}:
                 if event-string starts with "!%loop-value%":
-                    set audio player "AdminBot" audio paused state to false
+                    set audio player "AdminBot" audio paused state to false in guild "%{diskordlink.server.id}%"
 #
 #
             #     AUDIO : Skip
@@ -719,26 +719,26 @@ on guild message receive seen by "AdminBot":
                 if event-string starts with "!%loop-value%":
                     if {diskordlink.skip.load} is true:
                         stop trigger
-                    if bot "AdminBot" is playing audio:
+                    if bot "AdminBot" is playing audio in guild "%{diskordlink.server.id}%":
                         send message "**%title of track {_currenttrack}%** a été skip." to channel event-channel as "AdminBot"
-                        skip current track player "AdminBot" is playing
+                        skip current track player "AdminBot" is playing in guild "%{diskordlink.server.id}%"
                     else:
                         send message "Le bot ne joue rien et ne peut rien skip." to channel event-channel as "AdminBot"
 #
 #
             # AUDIO : Volume
-#            loop {diskordlink.command.music.volume::*}:
-#                if event-string starts with "!%loop-value% ":
-#                    replace all "!%loop-value% " with "" in {_msg}
-#                    replace all "%%" with "" in {_msg}
-#                    replace all " " with "" in {_msg}
-#                    if {_msg} parsed as number is not less than 1:
-#                        if {_msg} parsed as number is not greater than 100:
-#                            set {_msg} to "%{_msg}%" parsed as number
-#                            set {_vol} to round({_msg} * 1.5)
-#                            set {_vol} to "%{_vol}%" parsed as integer
-#                            set audio player "AdminBot" volume to {_vol}
-#                            send message "Le volume du bot est désormais à %{_msg}%%%" to channel event-channel as "AdminBot"
+            loop {diskordlink.command.music.volume::*}:
+                if event-string starts with "!%loop-value% ":
+                    replace all "!%loop-value% " with "" in {_msg}
+                    replace all "%%" with "" in {_msg}
+                    replace all " " with "" in {_msg}
+                    if {_msg} parsed as number is not less than 1:
+                        if {_msg} parsed as number is not greater than 100:
+                            set {_msg} to "%{_msg}%" parsed as number
+                            set {_vol} to round({_msg} * 1.5)
+                            set {_vol} to "%{_vol}%" parsed as integer
+                            set audio player "AdminBot" in guild "%{diskordlink.server.id}%" volume to {_vol}
+                            send message "Le volume du bot est désormais à %{_msg}%%%" to channel event-channel as "AdminBot"
 #
 #
             # AUDIO : Disconnect
@@ -750,15 +750,15 @@ on guild message receive seen by "AdminBot":
 #
             loop {diskordlink.command.music.clear::*}:
                 if event-string starts with "!%loop-value%":
-                    if bot event-bot is playing audio:
-                        reset audio player "AdminBot"
+                    if bot event-bot is playing audio in guild "%{diskordlink.server.id}%":
+                        reset audio player "AdminBot" in guild "%{diskordlink.server.id}%"
                         send message "La playliste a bien été clear." to channel event-channel as "AdminBot"
 #
 #
             # AUDIO : Playlist
             loop {diskordlink.command.music.playliste::*}:
                 if event-string starts with "!%loop-value%":
-                    if bot "AdminBot" is playing audio:
+                    if bot "AdminBot" is playing audio in guild "%{diskordlink.server.id}%":
                         set {_list::*} to queue of audio player "AdminBot" in guild "{diskordlink.server.id}"
                         set {_count} to 0
                         loop {_list::*}:
